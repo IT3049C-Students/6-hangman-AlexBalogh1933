@@ -1,3 +1,4 @@
+/* eslint-disable quotes */
 class Hangman {
   constructor(_canvas) {
     if (!_canvas) {
@@ -19,7 +20,7 @@ class Hangman {
    * */
   getRandomWord(difficulty) {
     return fetch(
-      `https://hangman-micro-service-bpblrjerwh.now.sh?difficulty=${difficulty}`
+      `https://hangman-micro-service.herokuapp.com/?difficulty=${difficulty}`
     )
       .then((r) => r.json())
       .then((r) => r.word);
@@ -32,11 +33,18 @@ class Hangman {
    */
   start(difficulty, next) {
     // get word and set it to the class's this.word
+    this.word = this.getRandomWord(difficulty);
     // clear canvas
+    this.clearCanvas();
     // draw base
+    this.drawBase();
     // reset this.guesses to empty array
+    this.guesses = [];
     // reset this.isOver to false
+    this.isOver = false;
     // reset this.didWin to false
+    this.didWin = false;
+    next();
   }
 
   /**
@@ -45,19 +53,59 @@ class Hangman {
    */
   guess(letter) {
     // Check if nothing was provided and throw an error if so
+    if(letter === ``) {
+      throw `You need to make a guess`;
+    }
     // Check for invalid cases (numbers, symbols, ...) throw an error if it is
+    else if (!(/^[a-z]+$/i.test(letter))) {
+      throw "You need to guess a Letter";
+    }
     // Check if more than one letter was provided. throw an error if it is.
+    else if (letter.length != 1) {
+      throw `You can only guess 1 letter at a time`;
+    }
     // if it's a letter, convert it to lower case for consistency.
+    else if (/^[a-z]+$/i.test(letter)) {
+      letter = letter.toLowerCase;
+    }
     // check if this.guesses includes the letter. Throw an error if it has been guessed already.
-    // add the new letter to the guesses array.
+    for(let i = 0; i <= this.guesses.length; i++) {
+      if(this.guesses[i] == letter) {
+        throw `You already guessed this letter`;
+      }
+      // add the new letter to the guesses array.
+      else {
+        this.guesses.push(letter);
+      }
+    }
+
     // check if the word includes the guessed letter:
-    //    if it's is call checkWin()
-    //    if it's not call onWrongGuess()
+    if(this.word.includes(letter)) {
+      //    if it's is call checkWin()
+      this.checkWin();
+    }
+    else {
+      //    if it's not call onWrongGuess()
+      this.onWrongGuess();
+    }
   }
 
   checkWin() {
     // using the word and the guesses array, figure out how many remaining unknowns.
+    let wordLength = this.word.length;
+    let remainingLetters = wordLength;
+    for(let i = 0; i <= wordLength; i++) {
+      for(let j = 0; i <= this.guesses.length; i++) {
+        if(this.word.charAt(i) === this.guesses[j]) {
+          remainingLetters--;
+        }
+      }
+    }
     // if zero, set both didWin, and isOver to true
+    if(remainingLetters == 0) {
+      this.didWin = true;
+      this.isOver = true;
+    }
   }
 
   /**
@@ -65,7 +113,37 @@ class Hangman {
    * drawHead, drawBody, drawRightArm, drawLeftArm, drawRightLeg, or drawLeftLeg.
    * if the number wrong guesses is 6, then also set isOver to true and didWin to false.
    */
-  onWrongGuess() {}
+  onWrongGuess() {
+    let wrongGuess;
+    if(wrongGuess == 0) {
+      wrongGuess++;
+      this.drawHead;
+    }
+    else if(wrongGuess == 1) {
+      wrongGuess++;
+      this.drawBody;
+    }
+    else if(wrongGuess == 2) {
+      wrongGuess++;
+      this.drawLeftArm;
+    }
+    else if(wrongGuess == 3) {
+      wrongGuess++;
+      this.drawRightArm;
+    }
+    else if(wrongGuess == 4) {
+      wrongGuess++;
+      this.drawLeftLeg;
+    }
+    else if(wrongGuess == 5) {
+      wrongGuess++;
+      this.drawRightLeg;
+    }
+    else {
+      this.isOver = true;
+      this.didWin = false;
+    }
+  }
 
   /**
    * This function will return a string of the word placeholder
@@ -73,7 +151,20 @@ class Hangman {
    * i.e.: if the word is BOOK, and the letter O has been guessed, this would return _ O O _
    */
   getWordHolderText() {
-    return;
+    let placeholderStr = ``;
+    let wordLength = this.word.length;
+    for(let i = 0; i <= this.wordLength; i++) {
+      for(let j = 0; j <= this.guesses.length; i++) {
+        if(this.word.charAt(i) === this.guesses[j]) {
+          placeholderStr.concat(this.word.charAt(i), ` `);
+        }
+        else {
+          placeholderStr.concat(`_ `);
+        }
+      }
+    }
+    placeholderStr.trim;
+    return placeholderStr;
   }
 
   /**
@@ -83,10 +174,13 @@ class Hangman {
    * Hint: use the Array.prototype.join method.
    */
   getGuessesText() {
-    return ``;
+    let guessStr = this.guesses.join(`, `);
+    let guessesText = `Guesses: `;
+    guessesText.concat(guessStr);
+    return guessesText;
   }
 
-  /**
+  /**\graphics\canvas_drawing.asp
    * Clears the canvas
    */
   clearCanvas() {
@@ -103,15 +197,37 @@ class Hangman {
     this.ctx.fillRect(10, 410, 175, 10); // Base
   }
 
-  drawHead() {}
+  drawHead() {
+    this.ctx.beginPath();
+    this.ctx.arc(250, 100, 40, 0, 2 * Math.PI);
+    this.ctx.stroke();
+  }
 
-  drawBody() {}
+  drawBody() {
+    this.ctx.fillRect(250, 140, 1, 150);
+  }
 
-  drawLeftArm() {}
+  drawLeftArm() {
+    this.ctx.moveTo(250, 250);
+    this.ctx.lineTo(175, 175);
+    this.ctx.stroke();
+  }
 
-  drawRightArm() {}
+  drawRightArm() {
+    this.ctx.moveTo(250, 250);
+    this.ctx.lineTo(325, 175);
+    this.ctx.stroke();
+  }
 
-  drawLeftLeg() {}
+  drawLeftLeg() {
+    this.ctx.moveTo(250, 290);
+    this.ctx.lineTo(200, 365);
+    this.ctx.stroke();
+  }
 
-  drawRightLeg() {}
+  drawRightLeg() {
+    this.ctx.moveTo(250, 290);
+    this.ctx.lineTo(300, 365);
+    this.ctx.stroke();
+  }
 }
